@@ -1,0 +1,7 @@
+создаем файлы и вставляем свои ключи
+default.json
+production.json
+{
+	"TELEGRAM_TOKEN": "",
+	"OPENAI_KEY": ""
+}
