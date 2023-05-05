@@ -1,4 +1,6 @@
 создаем файлы и вставляем свои ключи
+TELEGRAM_TOKEN берется у https://t.me/BotFather выбираем у него /newbot придумываем публичное имя бота и потом username его
+OPENAI_KEY берется по адресу https://platform.openai.com/account/api-keys
 default.json
 production.json
 {

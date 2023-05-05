@@ -28,7 +28,7 @@ class OggConverter {
 					.run();
 			});
 		} catch (e) {
-			console.log('Error create mp3', e.message);
+			console.log('Error class OggConverter toMp3', e.message);
 		}
 	}
 
@@ -46,7 +46,7 @@ class OggConverter {
 				stream.on('finish', () => resolve(oggPath));
 			});
 		} catch (e) {
-			console.log('Error create ogg', e.message);
+			console.log('Error class OggConverter create', e.message);
 		}
 	}
 }

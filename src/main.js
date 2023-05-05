@@ -4,77 +4,99 @@ import { code } from 'telegraf/format';
 import config from 'config';
 import { ogg } from './ogg.js';
 import { openAi } from './openAi.js';
-
-const INITIAL_SESSION = {
-	messages: [],
-};
+import { checkUserSession, currentSessionConsole } from './utils.js';
+import {
+	TEXT_ERROR,
+	WAITING_MESSAGE,
+	REQUEST_GONE,
+	BLOCK_MESSAGE,
+	BLACK_LIST_IDS,
+	voiceText,
+	telegramCommandText,
+} from './constants.js';
 
 const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
 
 bot.use(session());
 
-bot.command('new', async (el) => {
-	el.session = INITIAL_SESSION;
-	await el.reply('Жду вашего сообщения');
+bot.command(telegramCommandText.CLEAR_CONTEXT, async (context) => {
+	const userId = context.from.id;
+	context.session = { ...context.session, [userId]: [] };
+
+	await context.reply(WAITING_MESSAGE);
 });
 
-bot.command('start', async (el) => {
-	el.session = INITIAL_SESSION;
-	await el.reply('Жду вашего сообщения');
+bot.command(telegramCommandText.START, async (context) => {
+	const userId = context.from.id;
+	context.session = { ...context.session, [userId]: [] };
+
+	await context.reply(WAITING_MESSAGE);
 });
 
-bot.on(message('voice'), async (el) => {
-	if (!el.session) {
-		el.session = INITIAL_SESSION;
+bot.on(message('voice'), async (context) => {
+	const userId = String(context.message.from.id);
+	if (BLACK_LIST_IDS.includes(userId)) {
+		await context.reply(code(BLOCK_MESSAGE));
+		return;
 	}
+	context.session = checkUserSession(context.session, userId);
 
 	try {
-		await el.reply(code('Запрос ушел, ждите'));
-		const { message, telegram, session } = el;
+		await context.reply(code(voiceText.TRANSCRIPTION));
+		const { message, telegram, session, from } = context;
 		const { href } = await telegram.getFileLink(message.voice.file_id);
-		const userId = String(message.from.id);
 		const oggPath = await ogg.create(href, userId);
 		const mp3Path = await ogg.toMp3(oggPath, userId);
-
 		const text = await openAi.transcription(mp3Path);
-		await el.reply(code(`Ваш запрос: ${text}`));
+		if (!text) {
+			await context.reply(code(voiceText.UNCLEAR));
+			return;
+		}
+		await context.reply(code(`${voiceText.RECEIVED} ${text}`));
 
-		session.messages.push({ role: openAi.roles.USER, content: text });
+		session[userId].push({ role: openAi.roles.USER, content: text });
 
-		const response = await openAi.chat(session.messages);
+		await context.reply(code(REQUEST_GONE));
+		const response = await openAi.chat(session[userId]);
 
-		el.session.messages.push({
+		session[userId].push({
 			role: openAi.roles.ASSISTANT,
 			content: response.content,
 		});
 
-		await el.reply(response.content);
+		await context.reply(response.content);
+		currentSessionConsole(session, from.first_name, from?.last_name);
 	} catch (e) {
+		await context.reply(code(TEXT_ERROR));
 		console.log(`Error voice message ${e}`);
 	}
 });
 
-bot.on(message('text'), async (el) => {
-	if (!el.session) {
-		el.session = INITIAL_SESSION;
+bot.on(message('text'), async (context) => {
+	const userId = String(context.from.id);
+	if (BLACK_LIST_IDS.includes(userId)) {
+		await context.reply(code(BLOCK_MESSAGE));
+		return;
 	}
+	context.session = checkUserSession(context.session, userId);
 
 	try {
-		await el.reply(code('Запрос ушел, ждите'));
-		const { message, session } = el;
+		const { message, session, from } = context;
+		session[userId].push({ role: openAi.roles.USER, content: message.text });
 
-		session.messages.push({ role: openAi.roles.USER, content: message.text });
+		await context.reply(code(REQUEST_GONE));
+		const response = await openAi.chat(session[userId]);
 
-		const response = await openAi.chat(session.messages);
-
-		el.session.messages.push({
+		session[userId].push({
 			role: openAi.roles.ASSISTANT,
 			content: response.content,
 		});
 
-		await el.reply(response.content);
+		await context.reply(response.content);
+		currentSessionConsole(session, from.first_name, from?.last_name);
 	} catch (e) {
-		console.log(`Error voice message ${e}`);
+		await context.reply(code(TEXT_ERROR));
+		console.log(`Error text message ${e}`);
 	}
 });
 

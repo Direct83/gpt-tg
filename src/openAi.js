@@ -1,6 +1,7 @@
 import { Configuration, OpenAIApi } from 'openai';
 import config from 'config';
 import { createReadStream } from 'fs';
+import { removeFile } from './utils.js';
 
 class OpenAI {
 	roles = {
@@ -37,9 +38,11 @@ class OpenAI {
 				'whisper-1'
 			);
 
+			removeFile(filePath);
+
 			return response.data.text;
 		} catch (e) {
-			console.log('Error transcription', e.message);
+			console.log('Error class OpenAI transcription', e.message);
 		}
 	}
 }
