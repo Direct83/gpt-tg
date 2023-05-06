@@ -3,48 +3,34 @@ import config from 'config';
 import { createReadStream } from 'fs';
 import { removeFile } from './utils.js';
 
-class OpenAI {
-	roles = {
-		ASSISTANT: 'assistant',
-		USER: 'user',
-		SYSTEM: 'system',
-	};
+const openAi = new OpenAIApi(
+	new Configuration({ apiKey: config.get('OPENAI_KEY') })
+);
 
-	constructor(apiKey) {
-		const configuration = new Configuration({
-			apiKey,
+export async function chat(messages) {
+	try {
+		const response = await openAi.createChatCompletion({
+			model: 'gpt-3.5-turbo',
+			messages,
 		});
 
-		this.openai = new OpenAIApi(configuration);
-	}
-
-	async chat(messages) {
-		try {
-			const response = await this.openai.createChatCompletion({
-				model: 'gpt-3.5-turbo',
-				messages,
-			});
-
-			return response.data.choices[0].message;
-		} catch (e) {
-			console.log('Error class OpenAI chat', e.message);
-		}
-	}
-
-	async transcription(filePath) {
-		try {
-			const response = await this.openai.createTranscription(
-				createReadStream(filePath),
-				'whisper-1'
-			);
-
-			removeFile(filePath);
-
-			return response.data.text;
-		} catch (e) {
-			console.log('Error class OpenAI transcription', e.message);
-		}
+		return response.data.choices[0].message;
+	} catch (e) {
+		console.log('Error openAI chat', e.message);
 	}
 }
 
-export const openAi = new OpenAI(config.get('OPENAI_KEY'));
+export async function transcription(filePath) {
+	try {
+		const response = await openAi.createTranscription(
+			createReadStream(filePath),
+			'whisper-1'
+		);
+
+		removeFile(filePath);
+
+		return response.data.text;
+	} catch (e) {
+		console.log('Error openAI transcription', e.message);
+	}
+}

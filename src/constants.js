@@ -4,6 +4,10 @@ export const WAITING_MESSAGE = 'Жду вашего сообщения';
 
 export const REQUEST_GONE = 'Запрос ушел, ждите';
 
+export const BLOCK_MESSAGE = 'Вы заблокированы';
+
+export const BLACK_LIST_IDS = [];
+
 export const voiceText = {
 	TRANSCRIPTION: 'Перевожу то что вы сказали в текст',
 	UNCLEAR: 'Ничего не разобрал, повторите снова',
@@ -15,6 +19,7 @@ export const telegramCommandText = {
 	CLEAR_CONTEXT: 'clear_context',
 };
 
-export const BLOCK_MESSAGE = 'Вы заблокированы';
-
-export const BLACK_LIST_IDS = [];
+export const roles = {
+	ASSISTANT: 'assistant',
+	USER: 'user',
+};
