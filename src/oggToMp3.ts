@@ -3,13 +3,11 @@ import ffmpeg from 'fluent-ffmpeg';
 import installer from '@ffmpeg-installer/ffmpeg';
 import { createWriteStream } from 'fs';
 import { dirname, resolve } from 'path';
-import { fileURLToPath } from 'url';
-import { removeFile } from './utils.js';
+import { removeFile } from './utils';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
 ffmpeg.setFfmpegPath(installer.path);
 
-export function toMp3(input, output) {
+export function toMp3(input: string, output: string) {
 	try {
 		const outputPath = resolve(dirname(input), `${output}.mp3`);
 		return new Promise((resolve, reject) => {
@@ -23,14 +21,18 @@ export function toMp3(input, output) {
 				.on('error', (err) => reject(err.message))
 				.run();
 		});
-	} catch (e) {
-		console.log('Error toMp3', e.message);
+	} catch (e: unknown) {
+		if (e instanceof Error) {
+			console.log('Error toMp3', e.message);
+		} else {
+			console.log('Unknown error toMp3', e);
+		}
 	}
 }
 
-export async function create(url, fileName) {
+export async function create(url: string, fileName: string) {
 	try {
-		const oggPath = resolve(__dirname, '../voices', `${fileName}.ogg`);
+		const oggPath = resolve('./', './voices', `${fileName}.ogg`);
 		const response = await axios({
 			method: 'get',
 			url,
@@ -42,7 +44,11 @@ export async function create(url, fileName) {
 			response.data.pipe(stream);
 			stream.on('finish', () => resolve(oggPath));
 		});
-	} catch (e) {
-		console.log('Error ogg create', e.message);
+	} catch (e: unknown) {
+		if (e instanceof Error) {
+			console.log('Error ogg create', e.message);
+		} else {
+			console.log('Unknown error ogg create', e);
+		}
 	}
 }

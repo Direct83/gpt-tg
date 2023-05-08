@@ -6,7 +6,9 @@ export const REQUEST_GONE = 'Запрос ушел, ждите';
 
 export const BLOCK_MESSAGE = 'Вы заблокированы';
 
-export const BLACK_LIST_IDS = [];
+export const TEXT_UNDEFINED = 'текст не получен';
+
+export const BLACK_LIST_IDS: string[] = [];
 
 export const voiceText = {
 	TRANSCRIPTION: 'Перевожу то что вы сказали в текст',
@@ -17,9 +19,4 @@ export const voiceText = {
 export const telegramCommandText = {
 	START: 'start',
 	CLEAR_CONTEXT: 'clear_context',
-};
-
-export const roles = {
-	ASSISTANT: 'assistant',
-	USER: 'user',
 };
